@@ -3,14 +3,13 @@ from testMeasures import *
 from collections import Counter
 
 def findDifferencesInDynamics(test_score, duplicates_list, dynamics_list):
-    
 
-# Now that we know what measures have duplicates, we need a method that examines each measure iteratively
+
 # Take a list, examine each measure. Just iterate first, then we can extract/edit
 def findDynamics(test_score, duplicate_list):
     test_parts = test_score.recurse().getElementsByClass(stream.Part)
     test_part = test_parts[0].recurse().getElementsByClass(stream.Measure).stream()
-    # We get a list of measure numbers which have duplicate notes
+    # Get a list of measure numbers which have duplicate notes
     # Check if the measures themselves are true duplicates
     all_pattern_dynamics = []
     for pattern in duplicate_list:
