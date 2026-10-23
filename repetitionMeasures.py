@@ -2,7 +2,9 @@ from music21 import *
 from testMeasures import *
 from collections import Counter
 
-def findDifferencesInDynamics(test_score, duplicates_list, dynamics_list):
+#def findDifferencesInDynamics(test_score, duplicates_list, dynamics_list):
+
+
 
 
 # Take a list, examine each measure. Just iterate first, then we can extract/edit
@@ -62,19 +64,14 @@ def compareMeasures(measure_one, measure_two):
 
 test_score = getTestScore()
 repeating_measures = findRepeatingMeasures(test_score)
+test_score.show()
 
 # Expected output [[1, 2, 4], [3, 5]]
 print(repeating_measures)
 dynamics_list, repeating_measures = findDynamics(test_score, repeating_measures)
 print(dynamics_list)
 
-#test_score.show()
 
-#real_score = converter.parse("Poly_bass_treble_slow.musicxml")
-#print(findRepeatingMeasures(real_score))
-
-#for cs in list(real_score.recurse().getElementsByClass(harmony.ChordSymbol)):
-    #cs.activeSite.remove(cs)
 
 
 
