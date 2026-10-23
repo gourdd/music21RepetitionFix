@@ -2,11 +2,21 @@ from music21 import *
 from testMeasures import *
 from collections import Counter
 
-#def findDifferencesInDynamics(test_score, duplicates_list, dynamics_list):
-
-
-
-
+def findDifferencesInDynamics(test_score, duplicates_list, dynamics_list):
+    for dynamic_set in dynamics_list:
+        current_mode = strongMode(dynamic_set)
+        for duplicate_pattern in duplicates_list:
+            for duplicate_measure_number in duplicate_pattern:
+                current_measure = test_score.measure(duplicate_measure_number)
+                if not list(current_measure.recurse().getElementsByClass(dynamics.Dynamic)) == current_mode:
+                    print("hi")
+                    for dynamic in current_measure:
+                        dynamic_index = current_measure.index(dynamic)
+                        current_measure.pop(dynamic_index)
+                    for dynamic in current_mode:
+                        dynamic_offset = dynamic.offset
+                        current_measure.insert(dynamic_offset, dynamic)
+                    
 # Take a list, examine each measure. Just iterate first, then we can extract/edit
 def findDynamics(test_score, duplicate_list):
     test_parts = test_score.recurse().getElementsByClass(stream.Part)
@@ -22,7 +32,7 @@ def findDynamics(test_score, duplicate_list):
             current_measure_dynamics = []
             # Extract dynamics
             for dynamic in current_measure.recurse().getElementsByClass(dynamics.Dynamic):
-                current_measure_dynamics.append(dynamic.value)
+                current_measure_dynamics.append(dynamic)
             pattern_dynamics.append(current_measure_dynamics)
         all_pattern_dynamics.append(pattern_dynamics)
     return all_pattern_dynamics, duplicate_list
@@ -50,11 +60,14 @@ def findRepeatingMeasures(test_score, error_margin=0.0):
             return_measure_numbers.append(match_list)
     return return_measure_numbers
 
-def strongMode(data, threshold=0.5):
+def strongMode(data, threshold=0.0):
     if not data:
         return None
-    value, count = Counter(data).most_common(1)[0]
-    return value if count / len(data) >= threshold else None
+    counts = Counter(tuple(item) for item in data)   # lists can't be dict keys, tuples can
+    value, count = counts.most_common(1)[0]
+    if count / len(data) >= threshold:
+        return list(value)                           # hand back a list, like the input items
+    return None
 
 def compareMeasures(measure_one, measure_two):
     if list(measure_one.recurse().notesAndRests) == list(measure_two.recurse().notesAndRests):
@@ -62,14 +75,6 @@ def compareMeasures(measure_one, measure_two):
     else:
         return False
 
-test_score = getTestScore()
-repeating_measures = findRepeatingMeasures(test_score)
-test_score.show()
-
-# Expected output [[1, 2, 4], [3, 5]]
-print(repeating_measures)
-dynamics_list, repeating_measures = findDynamics(test_score, repeating_measures)
-print(dynamics_list)
 
 
 
