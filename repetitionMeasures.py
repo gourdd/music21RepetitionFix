@@ -2,49 +2,29 @@ from music21 import *
 from testMeasures import *
 from collections import Counter
 
-def findDifferencesInDynamics(test_score, duplicates_list, dynamics_list):
+def dynamicsSignature(measure):
+    return tuple((d.getOffsetInHierarchy(measure), d.value)
+                 for d in measure.recurse().getElementsByClass(dynamics.Dynamic))
+
+def fixDynamics(test_score, duplicates_list):
     for part in test_score.getElementsByClass([stream.Part, stream.PartStaff]):
-        for dynamic_set in dynamics_list:
-            current_mode = strongMode(dynamic_set)
+        for pattern in duplicates_list:
+            measures = [part.measure(n) for n in pattern]
+            measures = [m for m in measures if m is not None]
+            signatures = [dynamicsSignature(m) for m in measures]
 
-            print(current_mode)
-            if len(current_mode) > 0:
-                print(current_mode[0])
+            mode = strongMode(signatures)
+            if mode is None:
+                continue
+            mode = tuple(mode)
 
-            for duplicate_pattern in duplicates_list:
-                for duplicate_measure_number in duplicate_pattern:
-                    # duplicate_measure_number is the measure number that we want to operate on
-                    current_measure_dynamics = list(part.measure(duplicate_measure_number).recurse().getElementsByClass(dynamics.Dynamic))
-
-                    if not current_measure_dynamics == current_mode:
-                        if len(current_measure_dynamics) > 0:
-                            part.measure(duplicate_measure_number).removeByClass(dynamics.Dynamic)
-
-                        for dynamic in current_mode:
-                            dynamic_offset = dynamic.offset
-                            new_dynamic = dynamics.Dynamic(value=dynamic.value)
-                            part.measure(duplicate_measure_number).insert(dynamic_offset, new_dynamic)
-                    
-# Take a list, examine each measure. Just iterate first, then we can extract/edit
-def findDynamics(test_score, duplicate_list):
-    #test_parts = test_score.recurse().getElementsByClass(stream.Part)
-    #test_part = test_parts[0].recurse().getElementsByClass(stream.Measure).stream()
-    # Get a list of measure numbers which have duplicate notes
-    # Check if the measures themselves are true duplicates
-    all_pattern_dynamics = []
-    for part in test_score.getElementsByClass([stream.Part, stream.PartStaff]):
-        for pattern in duplicate_list:
-            pattern_dynamics = []
-            for measure in pattern:
-                # Going through one measure at a time
-                current_measure = part.measure(measure)
-                current_measure_dynamics = []
-                # Extract dynamics
-                for dynamic in current_measure.recurse().getElementsByClass(dynamics.Dynamic):
-                    current_measure_dynamics.append(dynamic)
-                pattern_dynamics.append(current_measure_dynamics)
-            all_pattern_dynamics.append(pattern_dynamics)
-    return all_pattern_dynamics, duplicate_list
+            for m, sig in zip(measures, signatures):
+                if sig == mode:
+                    continue
+                for d in list(m.recurse().getElementsByClass(dynamics.Dynamic)):
+                    m.remove(d, recurse=True)
+                for offset, value in mode:
+                    m.insert(offset, dynamics.Dynamic(value))
 
 # Returns a list of lists. Each list contains measure numbers that contain duplicate notes
 # [[1, 2, 4, 9], [3, 5], [6, 8]]
